@@ -7,6 +7,7 @@ import 'package:mobile/common/utils/app_style.dart';
 import 'package:mobile/features/feed/models/post_model.dart';
 import 'package:mobile/features/feed/widgets/post_card.dart';
 import 'package:mobile/features/feed/widgets/story_list.dart';
+import 'package:mobile/features/feed/widgets/story_list_improved.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -185,7 +186,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                       ),
                     ),
                   ),
-                  StoryList(),
+                  StoryListImproved(),
                 ],
               ),
             ),
