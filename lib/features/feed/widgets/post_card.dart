@@ -6,7 +6,6 @@ import 'package:mobile/common/utils/app_colors.dart';
 import 'package:mobile/common/utils/app_constants.dart';
 import 'package:mobile/common/utils/app_style.dart';
 import 'package:mobile/features/feed/models/post_model.dart';
-import 'package:mobile/features/feed/screens/post_detail_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 

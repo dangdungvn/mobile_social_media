@@ -6,7 +6,7 @@ import 'package:mobile/common/utils/app_style.dart';
 import 'package:mobile/features/auth/models/user_model.dart';
 import 'package:mobile/features/feed/models/post_model.dart';
 import 'package:mobile/features/feed/widgets/post_card.dart';
-import 'package:mobile/features/search/widgets/search_result_user_item_improved.dart';
+import 'package:mobile/features/search/widgets/search_result_user_item.dart';
 import 'package:provider/provider.dart';
 
 class SearchScreen extends StatefulWidget {

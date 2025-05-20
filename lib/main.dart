@@ -15,8 +15,9 @@ import 'package:mobile/features/feed/screens/news_feed_screen.dart';
 import 'package:mobile/features/feed/screens/post_detail_screen.dart';
 import 'package:mobile/features/profile/screens/profile_screen.dart';
 import 'package:mobile/features/search/screens/search_screen.dart';
-import 'package:mobile/features/entrypoint/screens/main_screen_improved.dart';
 import 'package:provider/provider.dart';
+
+import 'features/entrypoint/screens/main_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,7 +60,7 @@ class MyApp extends StatelessWidget {
         ),
         GoRoute(
           path: AppConstants.routeMain,
-          builder: (context, state) => const MainScreenImproved(),
+          builder: (context, state) => const MainScreen(),
         ),
         GoRoute(
           path: AppConstants.routeNewsFeed,
