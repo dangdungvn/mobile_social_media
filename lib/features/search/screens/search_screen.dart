@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mobile/common/providers/theme_provider.dart';
 import 'package:mobile/common/utils/app_colors.dart';
@@ -23,21 +24,37 @@ class _SearchScreenState extends State<SearchScreen>
   bool _hasSearched = false;
   String _currentQuery = '';
   late TabController _tabController;
+  final FocusNode _focusNode = FocusNode();
 
   // Mock search results
   List<UserModel> _userResults = [];
   List<PostModel> _postResults = [];
+  final List<String> _tagResults = [
+    'technology',
+    'design',
+    'flutter',
+    'mobile',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_handleTabSelection);
+  }
+
+  void _handleTabSelection() {
+    if (_tabController.indexIsChanging) {
+      _focusNode.unfocus();
+    }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _tabController.removeListener(_handleTabSelection);
     _tabController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -50,7 +67,7 @@ class _SearchScreenState extends State<SearchScreen>
       _hasSearched = true;
     });
 
-    // Simulate API call
+    // Simulate API call (would be replaced with real API call)
     Future.delayed(Duration(seconds: 1), () {
       setState(() {
         // Mock user results
@@ -131,268 +148,347 @@ class _SearchScreenState extends State<SearchScreen>
     return Scaffold(
       backgroundColor:
           isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Search bar
-            Container(
-              padding: EdgeInsets.all(16.w),
-              color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 46.h,
-                      decoration: BoxDecoration(
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+        leading: IconButton(
+          icon: Icon(
+            Icons.arrow_back,
+            color:
+                isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+          ),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          'Tìm kiếm',
+          style: AppStyle.textStyle(
+            18,
+            isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+            FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          // Search bar
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    height: 46.h,
+                    decoration: BoxDecoration(
+                      color:
+                          isDarkMode
+                              ? AppColors.backgroundDark
+                              : AppColors.backgroundLight,
+                      borderRadius: BorderRadius.circular(23.r),
+                      border: Border.all(
                         color:
                             isDarkMode
-                                ? AppColors.backgroundDark
-                                : AppColors.backgroundLight,
-                        borderRadius: BorderRadius.circular(23.r),
-                        border: Border.all(
-                          color:
-                              isDarkMode
-                                  ? AppColors.dividerDark
-                                  : AppColors.dividerLight,
-                          width: 1,
-                        ),
-                      ),
-                      child: TextField(
-                        controller: _searchController,
-                        style: AppStyle.textStyle(
-                          14,
-                          isDarkMode
-                              ? AppColors.textDarkDark
-                              : AppColors.textDarkLight,
-                          FontWeight.normal,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "Search people, posts, hashtags...",
-                          hintStyle: AppStyle.textStyle(
-                            14,
-                            isDarkMode
-                                ? AppColors.textLightDark
-                                : AppColors.textLightLight,
-                            FontWeight.normal,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color:
-                                isDarkMode
-                                    ? AppColors.textLightDark
-                                    : AppColors.textLightLight,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: 12.h,
-                            horizontal: 16.w,
-                          ),
-                          suffixIcon:
-                              _searchController.text.isNotEmpty
-                                  ? IconButton(
-                                    icon: Icon(
-                                      Icons.clear,
-                                      color:
-                                          isDarkMode
-                                              ? AppColors.textLightDark
-                                              : AppColors.textLightLight,
-                                      size: 18.sp,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _searchController.clear();
-                                      });
-                                    },
-                                  )
-                                  : null,
-                        ),
-                        textInputAction: TextInputAction.search,
-                        onSubmitted: (_) => _performSearch(),
-                        onChanged: (value) {
-                          setState(() {});
-                        },
+                                ? AppColors.dividerDark
+                                : AppColors.dividerLight,
+                        width: 1,
                       ),
                     ),
+                    child: TextField(
+                      controller: _searchController,
+                      focusNode: _focusNode,
+                      style: AppStyle.textStyle(
+                        14,
+                        isDarkMode
+                            ? AppColors.textDarkDark
+                            : AppColors.textDarkLight,
+                        FontWeight.normal,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: "Tìm kiếm người dùng, bài viết, hashtag...",
+                        hintStyle: AppStyle.textStyle(
+                          14,
+                          isDarkMode
+                              ? AppColors.textLightDark
+                              : AppColors.textLightLight,
+                          FontWeight.normal,
+                        ),
+                        prefixIcon: Icon(
+                          CupertinoIcons.search,
+                          color:
+                              isDarkMode
+                                  ? AppColors.textLightDark
+                                  : AppColors.textLightLight,
+                          size: 20.sp,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: 12.h,
+                          horizontal: 16.w,
+                        ),
+                        suffixIcon:
+                            _searchController.text.isNotEmpty
+                                ? IconButton(
+                                  icon: Icon(
+                                    CupertinoIcons.clear_circled_solid,
+                                    color:
+                                        isDarkMode
+                                            ? AppColors.textLightDark
+                                            : AppColors.textLightLight,
+                                    size: 18.sp,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _searchController.clear();
+                                      _hasSearched = false;
+                                    });
+                                  },
+                                )
+                                : null,
+                      ),
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => _performSearch(),
+                      onChanged: (value) {
+                        setState(() {});
+                      },
+                    ),
                   ),
+                ),
 
-                  if (_searchController.text.isNotEmpty)
-                    Padding(
-                      padding: EdgeInsets.only(left: 12.w),
-                      child: TextButton(
-                        onPressed: _performSearch,
+                if (_searchController.text.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(left: 12.w),
+                    child: GestureDetector(
+                      onTap: _performSearch,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 16.w,
+                          vertical: 8.h,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topRight,
+                            end: Alignment.bottomLeft,
+                            colors: [
+                              isDarkMode
+                                  ? AppColors.primaryDark
+                                  : AppColors.primaryLight,
+                              isDarkMode
+                                  ? AppColors.accentDark
+                                  : AppColors.accentLight,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20.r),
+                        ),
                         child: Text(
-                          "Search",
+                          "Tìm",
                           style: AppStyle.textStyle(
                             14,
-                            isDarkMode
-                                ? AppColors.primaryDark
-                                : AppColors.primaryLight,
+                            Colors.white,
                             FontWeight.w600,
                           ),
                         ),
                       ),
                     ),
+                  ),
+              ],
+            ),
+          ),
+
+          // Tab bar for search results
+          if (_hasSearched)
+            Container(
+              color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+              child: TabBar(
+                controller: _tabController,
+                labelColor:
+                    isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
+                unselectedLabelColor:
+                    isDarkMode
+                        ? AppColors.textMediumDark
+                        : AppColors.textMediumLight,
+                indicatorColor:
+                    isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
+                indicatorSize: TabBarIndicatorSize.label,
+                tabs: [
+                  Tab(text: "Tất cả"),
+                  Tab(text: "Người"),
+                  Tab(text: "Bài viết"),
+                  Tab(text: "Hashtag"),
                 ],
               ),
             ),
 
-            // Tab bar for search results
-            if (_hasSearched)
-              Container(
-                color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-                child: TabBar(
-                  controller: _tabController,
-                  labelColor:
-                      isDarkMode
-                          ? AppColors.primaryDark
-                          : AppColors.primaryLight,
-                  unselectedLabelColor:
-                      isDarkMode
-                          ? AppColors.textMediumDark
-                          : AppColors.textMediumLight,
-                  indicatorColor:
-                      isDarkMode
-                          ? AppColors.primaryDark
-                          : AppColors.primaryLight,
-                  tabs: [
-                    Tab(text: "Top"),
-                    Tab(text: "People"),
-                    Tab(text: "Posts"),
-                  ],
-                ),
-              ),
-
-            // Search results or suggestions
-            Expanded(
-              child:
-                  _isLoading
-                      ? Center(
-                        child: CircularProgressIndicator(
-                          color:
-                              isDarkMode
-                                  ? AppColors.primaryDark
-                                  : AppColors.primaryLight,
-                        ),
-                      )
-                      : !_hasSearched
-                      ? _buildSearchSuggestions(isDarkMode)
-                      : TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildTopResults(isDarkMode),
-                          _buildPeopleResults(isDarkMode),
-                          _buildPostResults(isDarkMode),
-                        ],
+          // Search results or suggestions
+          Expanded(
+            child:
+                _isLoading
+                    ? Center(
+                      child: CircularProgressIndicator(
+                        color:
+                            isDarkMode
+                                ? AppColors.primaryDark
+                                : AppColors.primaryLight,
                       ),
-            ),
-          ],
-        ),
+                    )
+                    : !_hasSearched
+                    ? _buildSearchSuggestions(isDarkMode)
+                    : TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildTopResults(isDarkMode),
+                        _buildPeopleResults(isDarkMode),
+                        _buildPostResults(isDarkMode),
+                        _buildHashtagResults(isDarkMode),
+                      ],
+                    ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSearchSuggestions(bool isDarkMode) {
-    return Container(
-      color: isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight,
+    return ListView(
       padding: EdgeInsets.all(16.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Recent Searches",
-            style: AppStyle.textStyle(
-              16,
-              isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-              FontWeight.w600,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Tìm kiếm gần đây",
+              style: AppStyle.textStyle(
+                16,
+                isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+                FontWeight.w600,
+              ),
             ),
-          ),
-
-          SizedBox(height: 16.h),
-
-          // Recent searches
-          _buildRecentSearchItem("Jane Smith", isDarkMode, Icons.person),
-          _buildRecentSearchItem("#technology", isDarkMode, Icons.tag),
-          _buildRecentSearchItem("Blockchain", isDarkMode, Icons.search),
-
-          SizedBox(height: 24.h),
-
-          Text(
-            "Trending Topics",
-            style: AppStyle.textStyle(
-              16,
-              isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-              FontWeight.w600,
+            GestureDetector(
+              onTap: () {
+                // Xóa lịch sử tìm kiếm
+              },
+              child: Text(
+                "Xóa tất cả",
+                style: AppStyle.textStyle(
+                  13,
+                  isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
+                  FontWeight.w600,
+                ),
+              ),
             ),
-          ),
+          ],
+        ),
+        SizedBox(height: 16.h),
 
-          SizedBox(height: 16.h),
+        // Recent searches
+        _buildRecentSearchItem("Jane Smith", isDarkMode, CupertinoIcons.person),
+        _buildRecentSearchItem(
+          "#technology",
+          isDarkMode,
+          CupertinoIcons.number,
+        ),
+        _buildRecentSearchItem("Blockchain", isDarkMode, CupertinoIcons.search),
 
-          // Trending topics
-          _buildTrendingTopicItem("#WorldNewsToday", "10K posts", isDarkMode),
-          _buildTrendingTopicItem(
-            "#TechnologyTrends",
-            "8.5K posts",
-            isDarkMode,
-          ),
-          _buildTrendingTopicItem(
-            "#SustainableLiving",
-            "6.2K posts",
-            isDarkMode,
-          ),
-          _buildTrendingTopicItem(
-            "#DigitalArtGallery",
-            "5.7K posts",
-            isDarkMode,
-          ),
-        ],
-      ),
+        SizedBox(height: 24.h),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "Xu hướng",
+              style: AppStyle.textStyle(
+                16,
+                isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+                FontWeight.w600,
+              ),
+            ),
+            Icon(
+              CupertinoIcons.flame_fill,
+              color: AppColors.secondaryLight,
+              size: 20.sp,
+            ),
+          ],
+        ),
+
+        SizedBox(height: 16.h),
+
+        // Trending topics
+        _buildTrendingTopicItem("#WorldNewsToday", "10K bài viết", isDarkMode),
+        _buildTrendingTopicItem(
+          "#TechnologyTrends",
+          "8.5K bài viết",
+          isDarkMode,
+        ),
+        _buildTrendingTopicItem(
+          "#SustainableLiving",
+          "6.2K bài viết",
+          isDarkMode,
+        ),
+        _buildTrendingTopicItem(
+          "#DigitalArtGallery",
+          "5.7K bài viết",
+          isDarkMode,
+        ),
+      ],
     );
   }
 
   Widget _buildRecentSearchItem(String text, bool isDarkMode, IconData icon) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.h),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color:
-                isDarkMode
-                    ? AppColors.textMediumDark
-                    : AppColors.textMediumLight,
-            size: 18.sp,
+    return Dismissible(
+      key: Key(text),
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: 20.0),
+        color: AppColors.errorLight,
+        child: Icon(CupertinoIcons.delete, color: Colors.white),
+      ),
+      direction: DismissDirection.endToStart,
+      onDismissed: (direction) {
+        // Xóa mục tìm kiếm gần đây
+      },
+      child: InkWell(
+        onTap: () {
+          // Set search text
+          _searchController.text =
+              text.startsWith("#") ? text.substring(1) : text;
+          _performSearch();
+        },
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 12.h),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color:
+                    isDarkMode
+                        ? AppColors.textMediumDark
+                        : AppColors.textMediumLight,
+                size: 18.sp,
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: Text(
+                  text,
+                  style: AppStyle.textStyle(
+                    14,
+                    isDarkMode
+                        ? AppColors.textMediumDark
+                        : AppColors.textMediumLight,
+                    FontWeight.normal,
+                  ),
+                ),
+              ),
+              Icon(
+                CupertinoIcons.arrow_up_left,
+                color:
+                    isDarkMode
+                        ? AppColors.textLightDark
+                        : AppColors.textLightLight,
+                size: 18.sp,
+              ),
+            ],
           ),
-
-          SizedBox(width: 12.w),
-
-          Text(
-            text,
-            style: AppStyle.textStyle(
-              14,
-              isDarkMode ? AppColors.textMediumDark : AppColors.textMediumLight,
-              FontWeight.normal,
-            ),
-          ),
-
-          Spacer(),
-
-          GestureDetector(
-            onTap: () {
-              // Set search text
-              _searchController.text =
-                  text.startsWith("#") ? text.substring(1) : text;
-              _performSearch();
-            },
-            child: Icon(
-              Icons.north_west,
-              color:
-                  isDarkMode
-                      ? AppColors.textLightDark
-                      : AppColors.textLightLight,
-              size: 18.sp,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -422,38 +518,61 @@ class _SearchScreenState extends State<SearchScreen>
         ),
         child: Row(
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  hashtag,
-                  style: AppStyle.textStyle(
-                    14,
-                    isDarkMode
-                        ? AppColors.textDarkDark
-                        : AppColors.textDarkLight,
-                    FontWeight.w600,
+            Container(
+              width: 40.w,
+              height: 40.w,
+              decoration: BoxDecoration(
+                color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+                borderRadius: BorderRadius.circular(8.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
                   ),
+                ],
+              ),
+              child: Center(
+                child: Icon(
+                  CupertinoIcons.number_square,
+                  color: AppColors.primaryLight,
                 ),
-
-                SizedBox(height: 4.h),
-
-                Text(
-                  postCount,
-                  style: AppStyle.textStyle(
-                    12,
-                    isDarkMode
-                        ? AppColors.textLightDark
-                        : AppColors.textLightLight,
-                    FontWeight.normal,
-                  ),
-                ),
-              ],
+              ),
             ),
-
-            Spacer(),
-
-            Icon(Icons.trending_up, color: AppColors.accentLight),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    hashtag,
+                    style: AppStyle.textStyle(
+                      14,
+                      isDarkMode
+                          ? AppColors.textDarkDark
+                          : AppColors.textDarkLight,
+                      FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    postCount,
+                    style: AppStyle.textStyle(
+                      12,
+                      isDarkMode
+                          ? AppColors.textLightDark
+                          : AppColors.textLightLight,
+                      FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              CupertinoIcons.arrow_up_right_square,
+              color: AppColors.accentLight,
+              size: 24.sp,
+            ),
           ],
         ),
       ),
@@ -466,58 +585,78 @@ class _SearchScreenState extends State<SearchScreen>
       children: [
         // Users section
         if (_userResults.isNotEmpty) ...[
-          Text(
-            "People",
-            style: AppStyle.textStyle(
-              16,
-              isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-              FontWeight.w600,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Người",
+                style: AppStyle.textStyle(
+                  16,
+                  isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+                  FontWeight.w600,
+                ),
+              ),
+              if (_userResults.length > 2)
+                GestureDetector(
+                  onTap: () {
+                    _tabController.animateTo(1); // Switch to People tab
+                  },
+                  child: Text(
+                    "Xem tất cả",
+                    style: AppStyle.textStyle(
+                      13,
+                      isDarkMode
+                          ? AppColors.primaryDark
+                          : AppColors.primaryLight,
+                      FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
           ),
-
           SizedBox(height: 12.h),
-
           ...List.generate(
             _userResults.length > 2 ? 2 : _userResults.length,
             (index) => SearchResultUserItem(user: _userResults[index]),
           ),
-
-          if (_userResults.length > 2)
-            Padding(
-              padding: EdgeInsets.only(top: 8.h, bottom: 16.h),
-              child: TextButton(
-                onPressed: () {
-                  _tabController.animateTo(1); // Switch to People tab
-                },
-                child: Text(
-                  "See all people results",
-                  style: AppStyle.textStyle(
-                    14,
-                    isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
-                    FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
         ],
 
-        SizedBox(height: 16.h),
+        SizedBox(height: 24.h),
 
         // Posts section
         if (_postResults.isNotEmpty) ...[
-          Text(
-            "Posts",
-            style: AppStyle.textStyle(
-              16,
-              isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-              FontWeight.w600,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Bài viết",
+                style: AppStyle.textStyle(
+                  16,
+                  isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+                  FontWeight.w600,
+                ),
+              ),
+              if (_postResults.length > 1)
+                GestureDetector(
+                  onTap: () {
+                    _tabController.animateTo(2); // Switch to Posts tab
+                  },
+                  child: Text(
+                    "Xem tất cả",
+                    style: AppStyle.textStyle(
+                      13,
+                      isDarkMode
+                          ? AppColors.primaryDark
+                          : AppColors.primaryLight,
+                      FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
           ),
-
           SizedBox(height: 12.h),
-
           ...List.generate(
-            _postResults.length > 2 ? 2 : _postResults.length,
+            _postResults.length > 1 ? 1 : _postResults.length,
             (index) => Column(
               children: [
                 PostCard(post: _postResults[index]),
@@ -525,103 +664,55 @@ class _SearchScreenState extends State<SearchScreen>
               ],
             ),
           ),
+        ],
 
-          if (_postResults.length > 2)
-            Padding(
-              padding: EdgeInsets.only(top: 8.h),
-              child: TextButton(
-                onPressed: () {
-                  _tabController.animateTo(2); // Switch to Posts tab
+        SizedBox(height: 24.h),
+
+        // Hashtags section
+        if (_tagResults.isNotEmpty) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "Hashtag",
+                style: AppStyle.textStyle(
+                  16,
+                  isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+                  FontWeight.w600,
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  _tabController.animateTo(3); // Switch to Hashtags tab
                 },
                 child: Text(
-                  "See all post results",
+                  "Xem tất cả",
                   style: AppStyle.textStyle(
-                    14,
+                    13,
                     isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
                     FontWeight.w600,
                   ),
                 ),
               ),
-            ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          _buildHashtagGrid(isDarkMode, limit: 4),
         ],
 
         // No results message
         if (_userResults.isEmpty && _postResults.isEmpty)
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.search_off,
-                  size: 64.sp,
-                  color:
-                      isDarkMode
-                          ? AppColors.textLightDark
-                          : AppColors.textLightLight,
-                ),
-
-                SizedBox(height: 16.h),
-
-                Text(
-                  "No results found for \"$_currentQuery\"",
-                  style: AppStyle.textStyle(
-                    16,
-                    isDarkMode
-                        ? AppColors.textMediumDark
-                        : AppColors.textMediumLight,
-                    FontWeight.w500,
-                  ),
-                ),
-
-                SizedBox(height: 8.h),
-
-                Text(
-                  "Try different keywords or check spelling",
-                  style: AppStyle.textStyle(
-                    14,
-                    isDarkMode
-                        ? AppColors.textLightDark
-                        : AppColors.textLightLight,
-                    FontWeight.normal,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
+          _buildNoResultsMessage(isDarkMode),
       ],
     );
   }
 
   Widget _buildPeopleResults(bool isDarkMode) {
     if (_userResults.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.person_off,
-              size: 64.sp,
-              color:
-                  isDarkMode
-                      ? AppColors.textLightDark
-                      : AppColors.textLightLight,
-            ),
-
-            SizedBox(height: 16.h),
-
-            Text(
-              "No people found for \"$_currentQuery\"",
-              style: AppStyle.textStyle(
-                16,
-                isDarkMode
-                    ? AppColors.textMediumDark
-                    : AppColors.textMediumLight,
-                FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+      return _buildNoResultsMessage(
+        isDarkMode,
+        icon: CupertinoIcons.person_alt_circle,
+        message: "Không tìm thấy người dùng nào với từ khóa \"$_currentQuery\"",
       );
     }
 
@@ -636,33 +727,10 @@ class _SearchScreenState extends State<SearchScreen>
 
   Widget _buildPostResults(bool isDarkMode) {
     if (_postResults.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.article_outlined,
-              size: 64.sp,
-              color:
-                  isDarkMode
-                      ? AppColors.textLightDark
-                      : AppColors.textLightLight,
-            ),
-
-            SizedBox(height: 16.h),
-
-            Text(
-              "No posts found for \"$_currentQuery\"",
-              style: AppStyle.textStyle(
-                16,
-                isDarkMode
-                    ? AppColors.textMediumDark
-                    : AppColors.textMediumLight,
-                FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+      return _buildNoResultsMessage(
+        isDarkMode,
+        icon: CupertinoIcons.doc_text,
+        message: "Không tìm thấy bài viết nào với từ khóa \"$_currentQuery\"",
       );
     }
 
@@ -672,6 +740,174 @@ class _SearchScreenState extends State<SearchScreen>
       itemBuilder: (context, index) {
         return PostCard(post: _postResults[index]);
       },
+    );
+  }
+
+  Widget _buildHashtagResults(bool isDarkMode) {
+    if (_tagResults.isEmpty) {
+      return _buildNoResultsMessage(
+        isDarkMode,
+        icon: CupertinoIcons.number_square,
+        message: "Không tìm thấy hashtag nào với từ khóa \"$_currentQuery\"",
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Trending hashtags',
+            style: AppStyle.textStyle(
+              16,
+              isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+              FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          _buildHashtagGrid(isDarkMode),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHashtagGrid(bool isDarkMode, {int? limit}) {
+    final displayTags =
+        limit != null ? _tagResults.take(limit).toList() : _tagResults;
+
+    return GridView.builder(
+      physics: NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 2.5,
+        crossAxisSpacing: 12.w,
+        mainAxisSpacing: 12.h,
+      ),
+      itemCount: displayTags.length,
+      itemBuilder: (context, index) {
+        return GestureDetector(
+          onTap: () {
+            _searchController.text = displayTags[index];
+            _performSearch();
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(
+                color:
+                    isDarkMode ? AppColors.dividerDark : AppColors.dividerLight,
+              ),
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 12.w),
+            child: Row(
+              children: [
+                Container(
+                  width: 32.w,
+                  height: 32.w,
+                  decoration: BoxDecoration(
+                    color:
+                        isDarkMode
+                            ? AppColors.primaryDark.withOpacity(0.1)
+                            : AppColors.primaryLight.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      CupertinoIcons.number,
+                      size: 16.sp,
+                      color:
+                          isDarkMode
+                              ? AppColors.primaryDark
+                              : AppColors.primaryLight,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    '#${displayTags[index]}',
+                    style: AppStyle.textStyle(
+                      13,
+                      isDarkMode
+                          ? AppColors.textDarkDark
+                          : AppColors.textDarkLight,
+                      FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNoResultsMessage(
+    bool isDarkMode, {
+    IconData icon = CupertinoIcons.search,
+    String? message,
+  }) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80.w,
+              height: 80.w,
+              decoration: BoxDecoration(
+                color:
+                    isDarkMode ? AppColors.cardDark : AppColors.backgroundLight,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: Icon(
+                icon,
+                size: 40.sp,
+                color:
+                    isDarkMode
+                        ? AppColors.textLightDark
+                        : AppColors.textLightLight,
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Text(
+              message ??
+                  "Không tìm thấy kết quả nào với từ khóa \"$_currentQuery\"",
+              style: AppStyle.textStyle(
+                16,
+                isDarkMode
+                    ? AppColors.textMediumDark
+                    : AppColors.textMediumLight,
+                FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              "Hãy thử với từ khóa khác",
+              style: AppStyle.textStyle(
+                14,
+                isDarkMode ? AppColors.textLightDark : AppColors.textLightLight,
+                FontWeight.normal,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

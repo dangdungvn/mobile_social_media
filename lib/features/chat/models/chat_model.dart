@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 enum MessageType { text, image, video, file }
 
-enum MessageStatus { sent, delivered, read, failed }
+enum MessageStatus { sending, sent, delivered, read, failed }
 
 class MessageModel {
   final String id;
@@ -32,6 +32,27 @@ class MessageModel {
     required this.status,
     this.isDeleted = false,
   });
+  MessageModel copyWith({
+    String? id,
+    String? roomId,
+    String? senderId,
+    String? content,
+    DateTime? createdAt,
+    MessageType? type,
+    MessageStatus? status,
+    String? mediaUrl,
+  }) {
+    return MessageModel(
+      id: id ?? this.id,
+      roomId: roomId ?? this.roomId,
+      senderId: senderId ?? this.senderId,
+      content: content ?? this.content,
+      createdAt: createdAt ?? this.createdAt,
+      type: type ?? this.type,
+      status: status ?? this.status,
+      mediaUrl: mediaUrl ?? this.mediaUrl,
+    );
+  }
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(

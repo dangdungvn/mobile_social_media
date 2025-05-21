@@ -107,668 +107,630 @@ class _ProfileScreenState extends State<ProfileScreen>
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              backgroundColor:
-                  isDarkMode
-                      ? AppColors.backgroundDark
-                      : AppColors.backgroundLight,
-              expandedHeight: 300.h,
+              expandedHeight: 280.h,
+              floating: true,
               pinned: true,
+              backgroundColor:
+                  isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+              elevation: 0,
+              leading: IconButton(
+                icon: Icon(
+                  Icons.arrow_back,
+                  color:
+                      isDarkMode
+                          ? AppColors.textDarkDark
+                          : AppColors.textDarkLight,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
               actions: [
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'logout') {
-                      _showLogoutConfirmation(context, isDarkMode);
-                    }
-                  },
-                  icon: Icon(
-                    Icons.menu,
+                // Theme toggle button
+                Container(
+                  margin: EdgeInsets.only(right: 8.w),
+                  decoration: BoxDecoration(
                     color:
                         isDarkMode
-                            ? AppColors.textDarkDark
-                            : AppColors.textDarkLight,
+                            ? AppColors.backgroundDark.withOpacity(0.4)
+                            : AppColors.backgroundLight.withOpacity(0.7),
+                    shape: BoxShape.circle,
                   ),
-                  itemBuilder:
-                      (context) => [
-                        PopupMenuItem(
-                          value: 'settings',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.settings,
-                                color:
-                                    isDarkMode
-                                        ? AppColors.textDarkDark
-                                        : AppColors.textDarkLight,
-                              ),
-                              SizedBox(width: 10.w),
-                              Text('Settings'),
-                            ],
-                          ),
-                        ),
-                        PopupMenuItem(
-                          value: 'logout',
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.logout,
-                                color:
-                                    isDarkMode
-                                        ? AppColors.errorDark
-                                        : AppColors.errorLight,
-                              ),
-                              SizedBox(width: 10.w),
-                              Text('Đăng xuất'),
-                            ],
-                          ),
-                        ),
-                      ],
+                  child: IconButton(
+                    onPressed: () {
+                      final themeProvider = Provider.of<ThemeProvider>(
+                        context,
+                        listen: false,
+                      );
+                      themeProvider.toggleTheme();
+                    },
+                    icon: Icon(
+                      isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                      color:
+                          isDarkMode
+                              ? AppColors.textDarkDark
+                              : AppColors.textDarkLight,
+                      size: 22.sp,
+                    ),
+                  ),
+                ),
+                // Settings button
+                Container(
+                  margin: EdgeInsets.only(right: 8.w),
+                  decoration: BoxDecoration(
+                    color:
+                        isDarkMode
+                            ? AppColors.backgroundDark.withOpacity(0.4)
+                            : AppColors.backgroundLight.withOpacity(0.7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: () {
+                      // Navigate to settings
+                    },
+                    icon: Icon(
+                      Icons.settings,
+                      color:
+                          isDarkMode
+                              ? AppColors.textDarkDark
+                              : AppColors.textDarkLight,
+                      size: 22.sp,
+                    ),
+                  ),
                 ),
               ],
               flexibleSpace: FlexibleSpaceBar(
-                background: _buildProfileHeader(isDarkMode),
+                background: Stack(
+                  children: [
+                    // Cover photo
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              isDarkMode
+                                  ? AppColors.buttonGradientStartDark
+                                  : AppColors.buttonGradientStartLight,
+                              isDarkMode
+                                  ? AppColors.buttonGradientEndDark
+                                  : AppColors.buttonGradientEndLight,
+                            ],
+                          ),
+                        ),
+                        child: Opacity(
+                          opacity: 0.3,
+                          child: Image.network(
+                            'https://images.unsplash.com/photo-1553095066-5014bc7b7f2d?q=80&w=2071&auto=format&fit=crop',
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Profile info content with gradient overlay
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              Colors.black.withOpacity(0.7),
+                            ],
+                            stops: const [0.6, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Back button
+                    Positioned(
+                      top: 40.h,
+                      left: 16.w,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.3),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            // Navigate back
+                          },
+                          icon: Icon(Icons.arrow_back, color: Colors.white),
+                        ),
+                      ),
+                    ),
+
+                    // Profile picture and name
+                    Positioned(
+                      bottom: 70.h,
+                      left: 16.w,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          // Profile picture with border
+                          Container(
+                            width: 100.w,
+                            height: 100.w,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color:
+                                    isDarkMode
+                                        ? AppColors.cardDark
+                                        : Colors.white,
+                                width: 4,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 10,
+                                  spreadRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(50.r),
+                              child: Image.network(
+                                _user.profilePictureUrl!,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 16.w),
+                          // Username and verification
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    _user.fullName!,
+                                    style: TextStyle(
+                                      fontSize: 22.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      shadows: [
+                                        Shadow(
+                                          blurRadius: 3,
+                                          color: Colors.black.withOpacity(0.5),
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(width: 4.w),
+                                  if (_user.isVerified)
+                                    Icon(
+                                      Icons.verified,
+                                      color: AppColors.verified,
+                                      size: 18.sp,
+                                    ),
+                                ],
+                              ),
+                              SizedBox(height: 2.h),
+                              Text(
+                                "@${_user.username}",
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  color: Colors.white.withOpacity(0.9),
+                                  shadows: [
+                                    Shadow(
+                                      blurRadius: 3,
+                                      color: Colors.black.withOpacity(0.5),
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              bottom: TabBar(
-                controller: _tabController,
-                indicatorColor:
-                    isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
-                labelColor:
-                    isDarkMode
-                        ? AppColors.textDarkDark
-                        : AppColors.textDarkLight,
-                unselectedLabelColor:
-                    isDarkMode
-                        ? AppColors.textLightDark
-                        : AppColors.textLightLight,
-                tabs: [
-                  Tab(text: 'Posts'),
-                  Tab(text: 'Media'),
-                  Tab(text: 'Liked'),
-                ],
+            ),
+
+            // Bio section
+            SliverToBoxAdapter(
+              child: Container(
+                color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Bio text
+                    if (_user.bio != null && _user.bio!.isNotEmpty)
+                      Text(
+                        _user.bio!,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color:
+                              isDarkMode
+                                  ? AppColors.textMediumDark
+                                  : AppColors.textMediumLight,
+                          height: 1.4,
+                        ),
+                      ),
+
+                    SizedBox(height: 16.h),
+
+                    // Stats row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStatItem(
+                          context: context,
+                          count: _userPosts.length,
+                          label: "Posts",
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildStatItem(
+                          context: context,
+                          count: _user.followers?.length ?? 0,
+                          label: "Followers",
+                          isDarkMode: isDarkMode,
+                        ),
+                        _buildStatItem(
+                          context: context,
+                          count: _user.following?.length ?? 0,
+                          label: "Following",
+                          isDarkMode: isDarkMode,
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 16.h),
+
+                    // Action buttons row
+                    Row(
+                      children: [
+                        // Edit Profile button
+                        Expanded(
+                          child: Container(
+                            height: 40.h,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20.r),
+                              gradient: LinearGradient(
+                                begin: Alignment.topRight,
+                                end: Alignment.bottomLeft,
+                                colors: [
+                                  isDarkMode
+                                      ? AppColors.buttonGradientStartDark
+                                      : AppColors.buttonGradientStartLight,
+                                  isDarkMode
+                                      ? AppColors.buttonGradientEndDark
+                                      : AppColors.buttonGradientEndLight,
+                                ],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      isDarkMode
+                                          ? AppColors.primaryDark.withOpacity(
+                                            0.3,
+                                          )
+                                          : AppColors.primaryLight.withOpacity(
+                                            0.3,
+                                          ),
+                                  blurRadius: 8,
+                                  spreadRadius: 0,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                "Edit Profile",
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(width: 12.w),
+
+                        // Share Profile button
+                        Container(
+                          height: 40.h,
+                          width: 40.h,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color:
+                                isDarkMode
+                                    ? AppColors.backgroundDark
+                                    : AppColors.backgroundLight,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                spreadRadius: 0,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.share_outlined,
+                              color:
+                                  isDarkMode
+                                      ? AppColors.textMediumDark
+                                      : AppColors.textMediumLight,
+                              size: 20.sp,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
+            ),
+
+            // Tab bar
+            SliverPersistentHeader(
+              delegate: _SliverAppBarDelegate(
+                TabBar(
+                  controller: _tabController,
+                  labelColor:
+                      isDarkMode
+                          ? AppColors.primaryDark
+                          : AppColors.primaryLight,
+                  unselectedLabelColor:
+                      isDarkMode
+                          ? AppColors.textMediumDark
+                          : AppColors.textMediumLight,
+                  indicatorColor:
+                      isDarkMode
+                          ? AppColors.primaryDark
+                          : AppColors.primaryLight,
+                  indicatorWeight: 3.0,
+                  tabs: [
+                    Tab(icon: Icon(Icons.grid_on_rounded)),
+                    Tab(icon: Icon(Icons.bookmark_border)),
+                    Tab(icon: Icon(Icons.person_pin_outlined)),
+                  ],
+                ),
+                isDarkMode: isDarkMode,
+              ),
+              pinned: true,
             ),
           ];
         },
         body: TabBarView(
           controller: _tabController,
           children: [
-            // Posts tab
-            _buildPostsTab(isDarkMode),
+            // Posts Tab
+            _buildPostsGrid(isDarkMode),
 
-            // Media tab
-            _buildMediaTab(isDarkMode),
+            // Saved Tab
+            _buildSavedGrid(isDarkMode),
 
-            // Liked tab
-            _buildLikedTab(isDarkMode),
+            // Tagged Tab
+            _buildTaggedGrid(isDarkMode),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProfileHeader(bool isDarkMode) {
-    return Container(
-      padding: EdgeInsets.only(top: 100.h, left: 16.w, right: 16.w),
-      decoration: BoxDecoration(
-        color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-      ),
-      child: Column(
-        children: [
-          // Profile picture
-          Container(
-            width: 100.w,
-            height: 100.w,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color:
-                    isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
-                width: 3.w,
-              ),
-              image: DecorationImage(
-                image: NetworkImage(
-                  _user.profilePictureUrl ?? 'https://i.pravatar.cc/300',
-                ),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-
-          SizedBox(height: 16.h),
-
-          // Name and verification
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _user.fullName ?? _user.username,
-                style: AppStyle.textStyle(
-                  22,
-                  isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-                  FontWeight.w600,
-                ),
-              ),
-              if (_user.isVerified)
-                Padding(
-                  padding: EdgeInsets.only(left: 4.w),
-                  child: Icon(
-                    Icons.verified,
-                    color:
-                        isDarkMode
-                            ? AppColors.primaryDark
-                            : AppColors.primaryLight,
-                    size: 20.sp,
-                  ),
-                ),
-            ],
-          ),
-
-          SizedBox(height: 4.h),
-
-          // Username
-          Text(
-            '@${_user.username}',
-            style: AppStyle.textStyle(
-              14,
-              isDarkMode ? AppColors.textLightDark : AppColors.textLightLight,
-              FontWeight.normal,
-            ),
-          ),
-
-          SizedBox(height: 12.h),
-
-          // Bio
-          if (_user.bio != null)
-            Text(
-              _user.bio!,
-              style: AppStyle.textStyle(
-                14,
-                isDarkMode
-                    ? AppColors.textMediumDark
-                    : AppColors.textMediumLight,
-                FontWeight.normal,
-              ),
-              textAlign: TextAlign.center,
-            ),
-
-          SizedBox(height: 16.h),
-
-          // Stats (followers, following, etc)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildStatColumn('Posts', '42', isDarkMode),
-              _buildStatColumn(
-                'Followers',
-                _user.followers?.length.toString() ?? '0',
-                isDarkMode,
-              ),
-              _buildStatColumn(
-                'Following',
-                _user.following?.length.toString() ?? '0',
-                isDarkMode,
-              ),
-            ],
-          ),
-
-          SizedBox(height: 16.h),
-
-          // Edit profile button
-          CustomButton(
-            text: 'Edit Profile',
-            onPressed: () {
-              // Navigate to edit profile
-            },
-            isLoading: false,
-            isOutlined: true,
-            isFullWidth: false,
-            width: 150.w,
-            height: 36.h,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatColumn(String label, String value, bool isDarkMode) {
+  Widget _buildStatItem({
+    required BuildContext context,
+    required int count,
+    required String label,
+    required bool isDarkMode,
+  }) {
     return Column(
       children: [
         Text(
-          value,
-          style: AppStyle.textStyle(
-            18,
-            isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-            FontWeight.w600,
+          "$count",
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+            color:
+                isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
           ),
         ),
         SizedBox(height: 4.h),
         Text(
           label,
-          style: AppStyle.textStyle(
-            14,
-            isDarkMode ? AppColors.textLightDark : AppColors.textLightLight,
-            FontWeight.normal,
+          style: TextStyle(
+            fontSize: 14.sp,
+            color:
+                isDarkMode
+                    ? AppColors.textMediumDark
+                    : AppColors.textMediumLight,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildPostsTab(bool isDarkMode) {
-    return _isLoading
-        ? Center(
-          child: CircularProgressIndicator(
-            color: isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
-          ),
-        )
-        : _userPosts.isEmpty
-        ? _buildEmptyState('No posts yet', 'Share your first post', isDarkMode)
-        : ListView.builder(
-          padding: EdgeInsets.symmetric(vertical: 8.h),
-          itemCount: _userPosts.length,
-          itemBuilder: (context, index) {
-            return _buildPostItem(_userPosts[index], isDarkMode);
+  Widget _buildPostsGrid(bool isDarkMode) {
+    return GridView.builder(
+      padding: EdgeInsets.all(1.w),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 2.w,
+        mainAxisSpacing: 2.w,
+      ),
+      itemCount: _userPosts.length,
+      itemBuilder: (context, index) {
+        final post = _userPosts[index];
+        return InkWell(
+          onTap: () {
+            // Navigate to post details
           },
-        );
-  }
-
-  Widget _buildMediaTab(bool isDarkMode) {
-    // Filter posts with images
-    List<Map<String, dynamic>> mediaPosts =
-        _userPosts
-            .where(
-              (post) => post['type'] == 'image' || post['type'] == 'gallery',
-            )
-            .toList();
-
-    return mediaPosts.isEmpty
-        ? _buildEmptyState(
-          'No media yet',
-          'Share photos and videos',
-          isDarkMode,
-        )
-        : GridView.builder(
-          padding: EdgeInsets.all(4.w),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 4.w,
-            mainAxisSpacing: 4.h,
-          ),
-          itemCount: mediaPosts.length,
-          itemBuilder: (context, index) {
-            final post = mediaPosts[index];
-
-            if (post['type'] == 'gallery') {
-              // For gallery posts, show the first image with an overlay indicating multiple
-              return Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: NetworkImage(post['imageUrls'][0]),
+          child: Container(
+            decoration: BoxDecoration(
+              color:
+                  isDarkMode
+                      ? AppColors.backgroundDark
+                      : AppColors.backgroundLight,
+              image:
+                  post['imageUrl'] != null ||
+                          (post['imageUrls'] != null &&
+                              (post['imageUrls'] as List).isNotEmpty)
+                      ? DecorationImage(
+                        image: NetworkImage(
+                          post['imageUrl'] ?? post['imageUrls'][0],
+                        ),
                         fit: BoxFit.cover,
+                      )
+                      : null,
+            ),
+            child:
+                post['type'] == 'gallery'
+                    ? Align(
+                      alignment: Alignment.topRight,
+                      child: Container(
+                        margin: EdgeInsets.all(4.w),
+                        padding: EdgeInsets.all(2.w),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Icon(
+                          Icons.collections,
+                          color: Colors.white,
+                          size: 14.sp,
+                        ),
                       ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 8.h,
-                    right: 8.w,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 6.w,
-                        vertical: 2.h,
+                    )
+                    : post['imageUrl'] == null
+                    ? Center(
+                      child: Icon(
+                        Icons.article_outlined,
+                        color:
+                            isDarkMode
+                                ? AppColors.textMediumDark
+                                : AppColors.textMediumLight,
+                        size: 24.sp,
                       ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.collections,
-                            color: Colors.white,
-                            size: 12.sp,
-                          ),
-                          SizedBox(width: 2.w),
-                          Text(
-                            post['imageUrls'].length.toString(),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10.sp,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            } else {
-              // Single image posts
-              return Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: NetworkImage(post['imageUrl']),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              );
-            }
-          },
+                    )
+                    : null,
+          ),
         );
-  }
-
-  Widget _buildLikedTab(bool isDarkMode) {
-    // For demonstration, we'll show an empty state
-    return _buildEmptyState(
-      'No liked posts yet',
-      'Posts you like will appear here',
-      isDarkMode,
+      },
     );
   }
 
-  Widget _buildEmptyState(String title, String message, bool isDarkMode) {
+  Widget _buildSavedGrid(bool isDarkMode) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.sentiment_dissatisfied,
-            size: 60.sp,
+            Icons.bookmark_border,
+            size: 64.sp,
             color:
                 isDarkMode ? AppColors.textLightDark : AppColors.textLightLight,
           ),
           SizedBox(height: 16.h),
           Text(
-            title,
-            style: AppStyle.textStyle(
-              18,
-              isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-              FontWeight.w600,
+            "No Saved Posts",
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color:
+                  isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
             ),
           ),
           SizedBox(height: 8.h),
           Text(
-            message,
-            style: AppStyle.textStyle(
-              14,
-              isDarkMode ? AppColors.textLightDark : AppColors.textLightLight,
-              FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPostItem(Map<String, dynamic> post, bool isDarkMode) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
-      color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Post header
-          Padding(
-            padding: EdgeInsets.all(12.w),
-            child: Row(
-              children: [
-                Container(
-                  width: 40.w,
-                  height: 40.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(
-                      image: NetworkImage(
-                        _user.profilePictureUrl ?? 'https://i.pravatar.cc/300',
-                      ),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            _user.fullName ?? _user.username,
-                            style: AppStyle.textStyle(
-                              14,
-                              isDarkMode
-                                  ? AppColors.textDarkDark
-                                  : AppColors.textDarkLight,
-                              FontWeight.w600,
-                            ),
-                          ),
-                          if (_user.isVerified)
-                            Padding(
-                              padding: EdgeInsets.only(left: 4.w),
-                              child: Icon(
-                                Icons.verified,
-                                color:
-                                    isDarkMode
-                                        ? AppColors.primaryDark
-                                        : AppColors.primaryLight,
-                                size: 14.sp,
-                              ),
-                            ),
-                        ],
-                      ),
-                      Text(
-                        post['timeAgo'],
-                        style: AppStyle.textStyle(
-                          12,
-                          isDarkMode
-                              ? AppColors.textLightDark
-                              : AppColors.textLightLight,
-                          FontWeight.normal,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    // Show post options
-                  },
-                  icon: Icon(
-                    Icons.more_vert,
-                    color:
-                        isDarkMode
-                            ? AppColors.textMediumDark
-                            : AppColors.textMediumLight,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Post content
-          if (post['content'] != null)
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12.w),
-              child: Text(
-                post['content'],
-                style: AppStyle.textStyle(
-                  14,
-                  isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-                  FontWeight.normal,
-                ),
-              ),
-            ),
-
-          SizedBox(height: 8.h),
-
-          // Post media
-          if (post['type'] == 'image' && post['imageUrl'] != null)
-            Image.network(
-              post['imageUrl'],
-              width: double.infinity,
-              height: 300.h,
-              fit: BoxFit.cover,
-            )
-          else if (post['type'] == 'gallery' && post['imageUrls'] != null)
-            SizedBox(
-              height: 300.h,
-              child: PageView.builder(
-                itemCount: post['imageUrls'].length,
-                itemBuilder: (context, index) {
-                  return Image.network(
-                    post['imageUrls'][index],
-                    width: double.infinity,
-                    height: 300.h,
-                    fit: BoxFit.cover,
-                  );
-                },
-              ),
-            ),
-
-          // Post actions
-          Padding(
-            padding: EdgeInsets.all(12.w),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.favorite_outline,
-                      color:
-                          isDarkMode
-                              ? AppColors.textMediumDark
-                              : AppColors.textMediumLight,
-                      size: 24.sp,
-                    ),
-                    SizedBox(width: 16.w),
-                    Icon(
-                      Icons.comment_outlined,
-                      color:
-                          isDarkMode
-                              ? AppColors.textMediumDark
-                              : AppColors.textMediumLight,
-                      size: 24.sp,
-                    ),
-                    SizedBox(width: 16.w),
-                    Icon(
-                      Icons.share_outlined,
-                      color:
-                          isDarkMode
-                              ? AppColors.textMediumDark
-                              : AppColors.textMediumLight,
-                      size: 24.sp,
-                    ),
-                  ],
-                ),
-                Icon(
-                  Icons.bookmark_outline,
-                  color:
-                      isDarkMode
-                          ? AppColors.textMediumDark
-                          : AppColors.textMediumLight,
-                  size: 24.sp,
-                ),
-              ],
-            ),
-          ),
-
-          // Likes count
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 12.w),
-            child: Text(
-              '${post['likesCount']} likes',
-              style: AppStyle.textStyle(
-                14,
-                isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-                FontWeight.w600,
-              ),
-            ),
-          ),
-
-          // Comments count
-          Padding(
-            padding: EdgeInsets.only(
-              left: 12.w,
-              right: 12.w,
-              top: 4.h,
-              bottom: 12.h,
-            ),
-            child: Text(
-              'View all ${post['commentsCount']} comments',
-              style: AppStyle.textStyle(
-                14,
-                isDarkMode ? AppColors.textLightDark : AppColors.textLightLight,
-                FontWeight.normal,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showLogoutConfirmation(BuildContext context, bool isDarkMode) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor:
-              isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-          title: Text(
-            'Đăng xuất',
-            style: AppStyle.textStyle(
-              18,
-              isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-              FontWeight.w600,
-            ),
-          ),
-          content: Text(
-            'Bạn có chắc chắn muốn đăng xuất?',
-            style: AppStyle.textStyle(
-              16,
-              isDarkMode ? AppColors.textMediumDark : AppColors.textMediumLight,
-              FontWeight.normal,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Hủy',
-                style: AppStyle.textStyle(
-                  16,
+            "Items you save will appear here",
+            style: TextStyle(
+              fontSize: 14.sp,
+              color:
                   isDarkMode
                       ? AppColors.textMediumDark
                       : AppColors.textMediumLight,
-                  FontWeight.normal,
-                ),
-              ),
             ),
-            TextButton(
-              onPressed: () {
-                // Logout action
-                final authProvider = Provider.of<AuthProvider>(
-                  context,
-                  listen: false,
-                );
-                authProvider.logout().then((_) {
-                  // Navigate to login screen
-                  context.go(AppConstants.routeLogin);
-                });
-              },
-              child: Text(
-                'Đăng xuất',
-                style: AppStyle.textStyle(
-                  16,
-                  isDarkMode ? AppColors.errorDark : AppColors.errorLight,
-                  FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
+  }
+
+  Widget _buildTaggedGrid(bool isDarkMode) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.person_pin_outlined,
+            size: 64.sp,
+            color:
+                isDarkMode ? AppColors.textLightDark : AppColors.textLightLight,
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            "No Tagged Posts",
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color:
+                  isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            "When people tag you, it will appear here",
+            style: TextStyle(
+              fontSize: 14.sp,
+              color:
+                  isDarkMode
+                      ? AppColors.textMediumDark
+                      : AppColors.textMediumLight,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
+  final TabBar _tabBar;
+  final bool isDarkMode;
+
+  _SliverAppBarDelegate(this._tabBar, {required this.isDarkMode});
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+      child: _tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverAppBarDelegate oldDelegate) {
+    return oldDelegate.isDarkMode != isDarkMode;
   }
 }

@@ -16,10 +16,12 @@ class NewsFeedScreen extends StatefulWidget {
   State<NewsFeedScreen> createState() => _NewsFeedScreenState();
 }
 
-class _NewsFeedScreenState extends State<NewsFeedScreen> {
+class _NewsFeedScreenState extends State<NewsFeedScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = false;
   String _selectedFeedType = "For You"; // Default feed type
   final List<String> _feedTypes = ["For You", "Following", "Friends"];
+  late AnimationController _refreshIconController;
 
   // Mock posts data
   final List<PostModel> _posts = [
@@ -103,17 +105,37 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
     ),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _refreshIconController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+  }
+
+  @override
+  void dispose() {
+    _refreshIconController.dispose();
+    super.dispose();
+  }
+
   Future<void> _refreshFeed() async {
     setState(() {
       _isLoading = true;
     });
 
+    // Animate refresh icon
+    _refreshIconController.repeat();
+
     // Simulate API call
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 1));
 
     setState(() {
       _isLoading = false;
     });
+
+    _refreshIconController.reset();
   }
 
   @override
@@ -125,35 +147,129 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
           isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-        title: Text(
-          AppConstants.appName,
-          style: AppStyle.textStyle(
-            24,
-            isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
-            FontWeight.bold,
-          ),
+        title: Row(
+          children: [
+            Text(
+              AppConstants.appName,
+              style: TextStyle(
+                fontSize: 24.sp,
+                color:
+                    isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+            SizedBox(width: 4.w),
+            Icon(Icons.verified, color: AppColors.verified, size: 16.sp),
+          ],
         ),
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: Icon(
-              Icons.notifications_outlined,
+          // Search button
+          Container(
+            margin: EdgeInsets.only(right: 8.w),
+            decoration: BoxDecoration(
               color:
-                  isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+                  isDarkMode
+                      ? AppColors.backgroundDark
+                      : AppColors.backgroundLight,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              onPressed: () {},
+              icon: Icon(
+                Icons.search,
+                color:
+                    isDarkMode
+                        ? AppColors.textDarkDark
+                        : AppColors.textDarkLight,
+                size: 24.sp,
+              ),
             ),
           ),
-          IconButton(
-            onPressed: () {
-              final themeProvider = Provider.of<ThemeProvider>(
-                context,
-                listen: false,
-              );
-              themeProvider.toggleTheme();
-            },
-            icon: Icon(
-              isDarkMode ? Icons.light_mode : Icons.dark_mode,
+          // Notification button with badge
+          Container(
+            margin: EdgeInsets.only(right: 8.w),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color:
+                        isDarkMode
+                            ? AppColors.backgroundDark
+                            : AppColors.backgroundLight,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: () {},
+                    icon: Icon(
+                      Icons.notifications_outlined,
+                      color:
+                          isDarkMode
+                              ? AppColors.textDarkDark
+                              : AppColors.textDarkLight,
+                      size: 24.sp,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 10.h,
+                  right: 10.w,
+                  child: Container(
+                    width: 16.w,
+                    height: 16.w,
+                    decoration: BoxDecoration(
+                      color: AppColors.accentLight,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color:
+                            isDarkMode
+                                ? AppColors.cardDark
+                                : AppColors.cardLight,
+                        width: 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "3",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Theme toggle button
+          Container(
+            margin: EdgeInsets.only(right: 8.w),
+            decoration: BoxDecoration(
               color:
-                  isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+                  isDarkMode
+                      ? AppColors.backgroundDark
+                      : AppColors.backgroundLight,
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              onPressed: () {
+                final themeProvider = Provider.of<ThemeProvider>(
+                  context,
+                  listen: false,
+                );
+                themeProvider.toggleTheme();
+              },
+              icon: Icon(
+                isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                color:
+                    isDarkMode
+                        ? AppColors.textDarkDark
+                        : AppColors.textDarkLight,
+                size: 22.sp,
+              ),
             ),
           ),
         ],
@@ -164,37 +280,65 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
         color: isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
         child: ListView(
           children: [
-            // Stories section
+            // Stories section with elevated container
             Container(
-              color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-              padding: EdgeInsets.symmetric(vertical: 12.h),
+              margin: EdgeInsets.only(top: 8.h),
+              decoration: BoxDecoration(
+                color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    spreadRadius: 0,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(left: 16.w, bottom: 8.h),
+                    padding: EdgeInsets.only(
+                      left: 16.w,
+                      top: 16.h,
+                      bottom: 12.h,
+                    ),
                     child: Text(
                       "Stories",
-                      style: AppStyle.textStyle(
-                        16,
-                        isDarkMode
-                            ? AppColors.textDarkDark
-                            : AppColors.textDarkLight,
-                        FontWeight.w600,
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        color:
+                            isDarkMode
+                                ? AppColors.textDarkDark
+                                : AppColors.textDarkLight,
                       ),
                     ),
                   ),
                   StoryList(),
+                  SizedBox(height: 12.h),
                 ],
               ),
             ),
 
-            SizedBox(height: 8.h),
+            SizedBox(height: 16.h),
 
-            // Feed type selector
+            // Feed type selector with improved appearance
             Container(
-              color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-              padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 16.w),
+              decoration: BoxDecoration(
+                color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+                borderRadius: BorderRadius.circular(16.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    spreadRadius: 0,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -207,11 +351,12 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                               _selectedFeedType = type;
                             });
                           },
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: Duration(milliseconds: 200),
                             margin: EdgeInsets.only(right: 12.w),
                             padding: EdgeInsets.symmetric(
-                              horizontal: 16.w,
-                              vertical: 8.h,
+                              horizontal: 20.w,
+                              vertical: 10.h,
                             ),
                             decoration: BoxDecoration(
                               color:
@@ -219,29 +364,41 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
                                       ? isDarkMode
                                           ? AppColors.primaryDark
                                           : AppColors.primaryLight
-                                      : Colors.transparent,
-                              borderRadius: BorderRadius.circular(20.r),
-                              border: Border.all(
-                                color:
-                                    isSelected
-                                        ? isDarkMode
-                                            ? AppColors.primaryDark
-                                            : AppColors.primaryLight
-                                        : isDarkMode
-                                        ? AppColors.dividerDark
-                                        : AppColors.dividerLight,
-                              ),
+                                      : isDarkMode
+                                      ? AppColors.backgroundDark
+                                      : AppColors.backgroundLight,
+                              borderRadius: BorderRadius.circular(30.r),
+                              boxShadow:
+                                  isSelected
+                                      ? [
+                                        BoxShadow(
+                                          color:
+                                              isDarkMode
+                                                  ? AppColors.primaryDark
+                                                      .withOpacity(0.3)
+                                                  : AppColors.primaryLight
+                                                      .withOpacity(0.3),
+                                          blurRadius: 8,
+                                          spreadRadius: 0,
+                                          offset: Offset(0, 2),
+                                        ),
+                                      ]
+                                      : null,
                             ),
                             child: Text(
                               type,
-                              style: AppStyle.textStyle(
-                                14,
-                                isSelected
-                                    ? Colors.white
-                                    : isDarkMode
-                                    ? AppColors.textMediumDark
-                                    : AppColors.textMediumLight,
-                                isSelected ? FontWeight.w600 : FontWeight.w500,
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight:
+                                    isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : isDarkMode
+                                        ? AppColors.textMediumDark
+                                        : AppColors.textMediumLight,
                               ),
                             ),
                           ),
@@ -251,7 +408,7 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
               ),
             ),
 
-            SizedBox(height: 8.h),
+            SizedBox(height: 16.h),
 
             // Posts
             if (_isLoading)
@@ -268,9 +425,65 @@ class _NewsFeedScreenState extends State<NewsFeedScreen> {
               )
             else
               Column(
-                children: _posts.map((post) => PostCard(post: post)).toList(),
+                children:
+                    _posts.map((post) {
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 16.h),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16.r),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              spreadRadius: 0,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: PostCard(post: post),
+                      );
+                    }).toList(),
               ),
+
+            SizedBox(height: 80.h), // Extra space at bottom for FAB
           ],
+        ),
+      ),
+      // Floating action button for creating new post
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          width: 56.w,
+          height: 56.w,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [
+                isDarkMode
+                    ? AppColors.buttonGradientStartDark
+                    : AppColors.buttonGradientStartLight,
+                isDarkMode
+                    ? AppColors.buttonGradientEndDark
+                    : AppColors.buttonGradientEndLight,
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color:
+                    isDarkMode
+                        ? AppColors.primaryDark.withOpacity(0.3)
+                        : AppColors.primaryLight.withOpacity(0.3),
+                blurRadius: 10,
+                spreadRadius: 0,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Icon(Icons.add, color: Colors.white, size: 26.sp),
         ),
       ),
     );

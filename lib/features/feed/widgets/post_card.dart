@@ -1,26 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:go_router/go_router.dart';
 import 'package:mobile/common/providers/theme_provider.dart';
 import 'package:mobile/common/utils/app_colors.dart';
-import 'package:mobile/common/utils/app_constants.dart';
-import 'package:mobile/common/utils/app_style.dart';
 import 'package:mobile/features/feed/models/post_model.dart';
 import 'package:provider/provider.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-class PostCard extends StatelessWidget {
+class PostCard extends StatefulWidget {
   final PostModel post;
 
   const PostCard({required this.post, super.key});
+
+  @override
+  State<PostCard> createState() => _PostCardState();
+}
+
+class _PostCardState extends State<PostCard>
+    with SingleTickerProviderStateMixin {
+  bool _isLiked = false;
+  late AnimationController _likeAnimationController;
+  late Animation<double> _likeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _isLiked = widget.post.isLiked;
+
+    // Initialize animation controller for like button
+    _likeAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _likeAnimation = Tween<double>(begin: 1.0, end: 1.5).animate(
+      CurvedAnimation(
+        parent: _likeAnimationController,
+        curve: Curves.elasticOut,
+      ),
+    );
+
+    _likeAnimationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _likeAnimationController.reverse();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _likeAnimationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleLike() {
+    setState(() {
+      _isLiked = !_isLiked;
+    });
+
+    if (_isLiked) {
+      _likeAnimationController.forward();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
 
     return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
-      color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+      decoration: BoxDecoration(
+        color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+        borderRadius: BorderRadius.circular(16.r),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -31,21 +81,27 @@ class PostCard extends StatelessWidget {
           _buildContent(context, isDarkMode),
 
           // Post media (images/videos)
-          if (post.media != null && post.media!.isNotEmpty)
+          if (widget.post.media != null && widget.post.media!.isNotEmpty)
             _buildMediaContent(context, isDarkMode),
 
           // If this is a shared post
-          if (post.type == PostType.shared)
+          if (widget.post.type == PostType.shared)
             _buildSharedPost(context, isDarkMode),
 
           // Engagement stats
           _buildEngagementStats(context, isDarkMode),
 
           // Divider
-          Divider(
-            height: 1.h,
-            thickness: 1.h,
-            color: isDarkMode ? AppColors.dividerDark : AppColors.dividerLight,
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12.w),
+            child: Divider(
+              height: 1.h,
+              thickness: 1.h,
+              color:
+                  isDarkMode
+                      ? AppColors.dividerDark
+                      : AppColors.dividerLight.withOpacity(0.5),
+            ),
           ),
 
           // Action buttons
@@ -60,21 +116,48 @@ class PostCard extends StatelessWidget {
       padding: EdgeInsets.all(12.w),
       child: Row(
         children: [
-          // User avatar
+          // User avatar with border
           GestureDetector(
             onTap: () {
               // View profile
             },
             child: Container(
-              width: 40.w,
-              height: 40.w,
+              width: 44.w,
+              height: 44.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                image: DecorationImage(
-                  image: NetworkImage(
-                    post.userProfilePicture ?? "https://i.pravatar.cc/150",
+                border: Border.all(
+                  color:
+                      isDarkMode
+                          ? AppColors.dividerDark
+                          : AppColors.dividerLight,
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    spreadRadius: 0,
                   ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(22.r),
+                child: Image.network(
+                  widget.post.userProfilePicture ?? "https://i.pravatar.cc/150",
                   fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color:
+                            isDarkMode
+                                ? AppColors.primaryDark
+                                : AppColors.primaryLight,
+                        strokeWidth: 2,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -90,39 +173,34 @@ class PostCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      post.username ?? "Unknown User",
-                      style: AppStyle.textStyle(
-                        14,
-                        isDarkMode
-                            ? AppColors.textDarkDark
-                            : AppColors.textDarkLight,
-                        FontWeight.w600,
+                      widget.post.username ?? "Unknown User",
+                      style: TextStyle(
+                        fontSize: 15.sp,
+                        color:
+                            isDarkMode
+                                ? AppColors.textDarkDark
+                                : AppColors.textDarkLight,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    if (post.type == PostType.shared)
-                      Text(
-                        " shared a post",
-                        style: AppStyle.textStyle(
-                          14,
-                          isDarkMode
-                              ? AppColors.textMediumDark
-                              : AppColors.textMediumLight,
-                          FontWeight.normal,
-                        ),
+                    SizedBox(width: 4.w),
+                    if (widget.post.isVerified)
+                      Icon(
+                        Icons.verified,
+                        color: AppColors.verified,
+                        size: 14.sp,
                       ),
                   ],
                 ),
-
                 SizedBox(height: 2.h),
-
                 Text(
-                  timeago.format(post.createdAt),
-                  style: AppStyle.textStyle(
-                    12,
-                    isDarkMode
-                        ? AppColors.textLightDark
-                        : AppColors.textLightLight,
-                    FontWeight.normal,
+                  timeago.format(widget.post.createdAt),
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color:
+                        isDarkMode
+                            ? AppColors.textLightDark
+                            : AppColors.textLightLight,
                   ),
                 ),
               ],
@@ -132,6 +210,7 @@ class PostCard extends StatelessWidget {
           // More options button
           IconButton(
             onPressed: () {
+              // Show post options
               _showPostOptions(context, isDarkMode);
             },
             icon: Icon(
@@ -140,7 +219,7 @@ class PostCard extends StatelessWidget {
                   isDarkMode
                       ? AppColors.textMediumDark
                       : AppColors.textMediumLight,
-              size: 20.sp,
+              size: 22.sp,
             ),
           ),
         ],
@@ -149,269 +228,165 @@ class PostCard extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, bool isDarkMode) {
-    if (post.content.isEmpty) return SizedBox.shrink();
+    if (widget.post.content.isEmpty) return const SizedBox.shrink();
 
-    return GestureDetector(
-      onTap: () {
-        context.go(
-          '${AppConstants.routePostDetail.replaceFirst(":postId", "")}${post.id}',
-        );
-      },
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-        child: Text(
-          post.content,
-          style: AppStyle.textStyle(
-            15,
-            isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
-            FontWeight.normal,
-          ),
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
+      child: Text(
+        widget.post.content,
+        style: TextStyle(
+          fontSize: 15.sp,
+          color: isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
+          height: 1.4,
         ),
       ),
     );
   }
 
   Widget _buildMediaContent(BuildContext context, bool isDarkMode) {
-    if (post.media == null || post.media!.isEmpty) return SizedBox.shrink();
+    if (widget.post.media == null || widget.post.media!.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-    final mediaCount = post.media!.length;
+    // Single image post
+    if (widget.post.media!.length == 1) {
+      return GestureDetector(
+        onTap: () {
+          // View full image
+        },
+        child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+          height: 280.h,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16.r),
+            child: Image.network(
+              widget.post.media!.first.url,
+              fit: BoxFit.cover,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(
+                  child: CircularProgressIndicator(
+                    color:
+                        isDarkMode
+                            ? AppColors.primaryDark
+                            : AppColors.primaryLight,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+    }
 
-    return GestureDetector(
-      onTap: () {
-        context.go(
-          '${AppConstants.routePostDetail.replaceFirst(":postId", "")}${post.id}',
-        );
-      },
-      child: Container(
-        margin: EdgeInsets.only(top: 8.h),
-        constraints: BoxConstraints(maxHeight: mediaCount == 1 ? 300.h : 200.h),
-        child:
-            mediaCount == 1
-                ? _buildSingleMedia(context, post.media![0])
-                : _buildMediaGrid(context, post.media!),
+    // Multiple images post (grid or carousel)
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      height: 240.h,
+      child: GridView.count(
+        physics: NeverScrollableScrollPhysics(),
+        crossAxisCount: widget.post.media!.length > 2 ? 3 : 2,
+        mainAxisSpacing: 8.w,
+        crossAxisSpacing: 8.w,
+        children:
+            widget.post.media!.take(6).map((media) {
+              final isLastWithMore =
+                  widget.post.media!.length > 6 &&
+                  widget.post.media!.indexOf(media) == 5;
+
+              return GestureDetector(
+                onTap: () {
+                  // View all images
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12.r),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.network(media.url, fit: BoxFit.cover),
+                      if (isLastWithMore)
+                        Container(
+                          color: Colors.black.withOpacity(0.6),
+                          child: Center(
+                            child: Text(
+                              "+${widget.post.media!.length - 5}",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
       ),
     );
   }
 
-  Widget _buildSingleMedia(BuildContext context, PostMedia media) {
-    if (media.type == 'image') {
-      return Image.network(
-        media.url,
-        width: double.infinity,
-        height: 300.h,
-        fit: BoxFit.cover,
-      );
-    } else if (media.type == 'video') {
-      // In a real app, use a video player here
-      return Stack(
-        alignment: Alignment.center,
-        children: [
-          Image.network(
-            media.thumbnailUrl ?? media.url,
-            width: double.infinity,
-            height: 300.h,
-            fit: BoxFit.cover,
-          ),
-          Container(
-            width: 60.w,
-            height: 60.w,
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.play_arrow, color: Colors.white, size: 36.sp),
-          ),
-        ],
-      );
-    }
-
-    return SizedBox.shrink();
-  }
-
-  Widget _buildMediaGrid(BuildContext context, List<PostMedia> media) {
-    if (media.length == 2) {
-      return Row(
-        children: [
-          Expanded(child: _buildGridMediaItem(context, media[0])),
-          SizedBox(width: 2.w),
-          Expanded(child: _buildGridMediaItem(context, media[1])),
-        ],
-      );
-    } else if (media.length == 3) {
-      return Row(
-        children: [
-          Expanded(
-            flex: 1,
-            child: _buildGridMediaItem(context, media[0], height: 200.h),
-          ),
-          SizedBox(width: 2.w),
-          Expanded(
-            flex: 1,
-            child: Column(
-              children: [
-                _buildGridMediaItem(context, media[1], height: 99.h),
-                SizedBox(height: 2.h),
-                _buildGridMediaItem(context, media[2], height: 99.h),
-              ],
-            ),
-          ),
-        ],
-      );
-    } else {
-      return GridView.builder(
-        physics: NeverScrollableScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 2.w,
-          mainAxisSpacing: 2.h,
-        ),
-        itemCount: media.length > 4 ? 4 : media.length,
-        itemBuilder: (context, index) {
-          if (index == 3 && media.length > 4) {
-            // Show overlay with count of remaining images
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                _buildGridMediaItem(context, media[index]),
-                Container(
-                  color: Colors.black.withOpacity(0.6),
-                  child: Center(
-                    child: Text(
-                      "+${media.length - 4}",
-                      style: AppStyle.textStyle(
-                        24,
-                        Colors.white,
-                        FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }
-          return _buildGridMediaItem(context, media[index]);
-        },
-      );
-    }
-  }
-
-  Widget _buildGridMediaItem(
-    BuildContext context,
-    PostMedia media, {
-    double? height,
-  }) {
-    if (media.type == 'image') {
-      return SizedBox(
-        height: height,
-        child: Image.network(
-          media.url,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-        ),
-      );
-    } else if (media.type == 'video') {
-      return Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            height: height,
-            child: Image.network(
-              media.thumbnailUrl ?? media.url,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
-          ),
-          Icon(Icons.play_circle_fill, color: Colors.white, size: 24.sp),
-        ],
-      );
-    }
-
-    return SizedBox.shrink();
-  }
-
   Widget _buildSharedPost(BuildContext context, bool isDarkMode) {
-    // In a real app, you'd fetch the original post data
+    // This would show a preview of the original post
     return Container(
       margin: EdgeInsets.all(12.w),
+      padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
+        color:
+            isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight,
+        borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: isDarkMode ? AppColors.dividerDark : AppColors.dividerLight,
-          width: 1.w,
         ),
-        borderRadius: BorderRadius.circular(8.r),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.all(8.w),
-            child: Row(
-              children: [
-                Container(
-                  width: 32.w,
-                  height: 32.w,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(
-                      image: NetworkImage("https://i.pravatar.cc/150?img=10"),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+          // Original author info
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 16.r,
+                backgroundImage: const NetworkImage(
+                  "https://i.pravatar.cc/150?img=10", // Placeholder
                 ),
-
-                SizedBox(width: 8.w),
-
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Original Author",
-                      style: AppStyle.textStyle(
-                        12,
-                        isDarkMode
-                            ? AppColors.textDarkDark
-                            : AppColors.textDarkLight,
-                        FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      "Original post date",
-                      style: AppStyle.textStyle(
-                        10,
-                        isDarkMode
-                            ? AppColors.textLightDark
-                            : AppColors.textLightLight,
-                        FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-            child: Text(
-              "This is the original post content that was shared. It could be a longer text with more details about the topic.",
-              style: AppStyle.textStyle(
-                13,
-                isDarkMode
-                    ? AppColors.textMediumDark
-                    : AppColors.textMediumLight,
-                FontWeight.normal,
               ),
-            ),
+              SizedBox(width: 8.w),
+              Text(
+                "Original Author",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                  color:
+                      isDarkMode
+                          ? AppColors.textDarkDark
+                          : AppColors.textDarkLight,
+                ),
+              ),
+            ],
           ),
-
-          // Sample image in shared post
-          Image.network(
-            "https://images.unsplash.com/photo-1682686580003-22d3d65399a8?q=80&w=1171&auto=format&fit=crop",
-            width: double.infinity,
-            height: 150.h,
-            fit: BoxFit.cover,
+          SizedBox(height: 8.h),
+          // Original post content preview
+          Text(
+            "This is a preview of the original post content...",
+            style: TextStyle(
+              fontSize: 14.sp,
+              color:
+                  isDarkMode
+                      ? AppColors.textMediumDark
+                      : AppColors.textMediumLight,
+            ),
           ),
         ],
       ),
@@ -419,96 +394,62 @@ class PostCard extends StatelessWidget {
   }
 
   Widget _buildEngagementStats(BuildContext context, bool isDarkMode) {
-    if (post.likeCount == 0 && post.commentCount == 0 && post.shareCount == 0) {
-      return SizedBox.shrink();
-    }
-
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Likes count
-          if (post.likeCount > 0)
-            Expanded(
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.favorite,
-                    color: AppColors.secondaryLight,
-                    size: 16.sp,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    post.likeCount.toString(),
-                    style: AppStyle.textStyle(
-                      12,
+          // Likes count with icon
+          Row(
+            children: [
+              Icon(
+                Icons.favorite,
+                color: isDarkMode ? AppColors.likeDark : AppColors.likeLight,
+                size: 18.sp,
+              ),
+              SizedBox(width: 6.w),
+              Text(
+                "${widget.post.likeCount}",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color:
                       isDarkMode
                           ? AppColors.textMediumDark
                           : AppColors.textMediumLight,
-                      FontWeight.normal,
-                    ),
-                  ),
-                ],
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
+            ],
+          ),
 
-          // Comments count
-          if (post.commentCount > 0)
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.comment,
-                    color:
-                        isDarkMode
-                            ? AppColors.textMediumDark
-                            : AppColors.textMediumLight,
-                    size: 16.sp,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    post.commentCount.toString(),
-                    style: AppStyle.textStyle(
-                      12,
+          // Comments and shares
+          Row(
+            children: [
+              Text(
+                "${widget.post.commentCount} comments",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color:
                       isDarkMode
                           ? AppColors.textMediumDark
                           : AppColors.textMediumLight,
-                      FontWeight.normal,
-                    ),
-                  ),
-                ],
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-
-          // Shares count
-          if (post.shareCount > 0)
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Icon(
-                    Icons.share,
-                    color:
-                        isDarkMode
-                            ? AppColors.textMediumDark
-                            : AppColors.textMediumLight,
-                    size: 16.sp,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    post.shareCount.toString(),
-                    style: AppStyle.textStyle(
-                      12,
+              SizedBox(width: 10.w),
+              Text(
+                "${widget.post.shareCount} shares",
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color:
                       isDarkMode
                           ? AppColors.textMediumDark
                           : AppColors.textMediumLight,
-                      FontWeight.normal,
-                    ),
-                  ),
-                ],
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
+            ],
+          ),
         ],
       ),
     );
@@ -516,42 +457,54 @@ class PostCard extends StatelessWidget {
 
   Widget _buildActionButtons(BuildContext context, bool isDarkMode) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
+      padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 8.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          // Like button
           _buildActionButton(
             context,
-            isDarkMode,
-            post.isLiked ? Icons.favorite : Icons.favorite_border,
-            "Like",
-            post.isLiked ? AppColors.secondaryLight : null,
-            () {
-              // Like action
-            },
+            icon: _isLiked ? Icons.favorite : Icons.favorite_border,
+            label: "Like",
+            iconColor:
+                _isLiked
+                    ? (isDarkMode ? AppColors.likeDark : AppColors.likeLight)
+                    : (isDarkMode
+                        ? AppColors.textMediumDark
+                        : AppColors.textMediumLight),
+            onTap: _toggleLike,
+            isDarkMode: isDarkMode,
+            showAnimation: _isLiked,
           ),
+
+          // Comment button
           _buildActionButton(
             context,
-            isDarkMode,
-            Icons.chat_bubble_outline,
-            "Comment",
-            null,
-            () {
-              // Navigate to post detail for commenting
-              context.go(
-                '${AppConstants.routePostDetail.replaceFirst(":postId", "")}${post.id}',
-              );
+            icon: Icons.chat_bubble_outline,
+            label: "Comment",
+            iconColor:
+                isDarkMode
+                    ? AppColors.textMediumDark
+                    : AppColors.textMediumLight,
+            onTap: () {
+              // Navigate to comments
             },
+            isDarkMode: isDarkMode,
           ),
+
+          // Share button
           _buildActionButton(
             context,
-            isDarkMode,
-            Icons.share_outlined,
-            "Share",
-            null,
-            () {
-              // Share action
+            icon: Icons.share_outlined,
+            label: "Share",
+            iconColor:
+                isDarkMode
+                    ? AppColors.textMediumDark
+                    : AppColors.textMediumLight,
+            onTap: () {
+              // Show share options
             },
+            isDarkMode: isDarkMode,
           ),
         ],
       ),
@@ -559,43 +512,43 @@ class PostCard extends StatelessWidget {
   }
 
   Widget _buildActionButton(
-    BuildContext context,
-    bool isDarkMode,
-    IconData icon,
-    String label,
-    Color? iconColor,
-    VoidCallback onTap,
-  ) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 8.h),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 20.sp,
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color iconColor,
+    required VoidCallback onTap,
+    required bool isDarkMode,
+    bool showAnimation = false,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10.r),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+        child: Row(
+          children: [
+            AnimatedBuilder(
+              animation: _likeAnimationController,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: showAnimation ? _likeAnimation.value : 1.0,
+                  child: Icon(icon, color: iconColor, size: 20.sp),
+                );
+              },
+            ),
+            SizedBox(width: 6.w),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14.sp,
                 color:
-                    iconColor ??
-                    (isDarkMode
+                    isDarkMode
                         ? AppColors.textMediumDark
-                        : AppColors.textMediumLight),
+                        : AppColors.textMediumLight,
+                fontWeight: FontWeight.w500,
               ),
-              SizedBox(width: 8.w),
-              Text(
-                label,
-                style: AppStyle.textStyle(
-                  12,
-                  isDarkMode
-                      ? AppColors.textMediumDark
-                      : AppColors.textMediumLight,
-                  FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -605,107 +558,90 @@ class PostCard extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16.r),
-              topRight: Radius.circular(16.r),
+      builder:
+          (context) => Container(
+            decoration: BoxDecoration(
+              color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20.r),
+                topRight: Radius.circular(20.r),
+              ),
+            ),
+            padding: EdgeInsets.symmetric(vertical: 16.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Container(
+                  width: 40.w,
+                  height: 4.h,
+                  margin: EdgeInsets.only(bottom: 16.h),
+                  decoration: BoxDecoration(
+                    color:
+                        isDarkMode
+                            ? AppColors.dividerDark
+                            : AppColors.dividerLight,
+                    borderRadius: BorderRadius.circular(2.r),
+                  ),
+                ),
+
+                _buildOptionItem(
+                  context,
+                  icon: Icons.bookmark_border,
+                  label: "Save Post",
+                  isDarkMode: isDarkMode,
+                ),
+                _buildOptionItem(
+                  context,
+                  icon: Icons.person_remove_outlined,
+                  label: "Unfollow User",
+                  isDarkMode: isDarkMode,
+                ),
+                _buildOptionItem(
+                  context,
+                  icon: Icons.block,
+                  label: "Report Post",
+                  isDarkMode: isDarkMode,
+                  isDestructive: true,
+                ),
+              ],
             ),
           ),
-          padding: EdgeInsets.symmetric(vertical: 16.h),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color:
-                      isDarkMode
-                          ? AppColors.dividerDark
-                          : AppColors.dividerLight,
-                  borderRadius: BorderRadius.circular(2.r),
-                ),
-                margin: EdgeInsets.only(bottom: 16.h),
-              ),
-
-              _buildOptionItem(
-                context,
-                isDarkMode,
-                Icons.bookmark_border,
-                "Save Post",
-                () => Navigator.pop(context),
-              ),
-
-              _buildOptionItem(
-                context,
-                isDarkMode,
-                Icons.person_add_outlined,
-                "Follow ${post.username ?? 'User'}",
-                () => Navigator.pop(context),
-              ),
-
-              _buildOptionItem(
-                context,
-                isDarkMode,
-                Icons.report_outlined,
-                "Report Post",
-                () => Navigator.pop(context),
-              ),
-
-              _buildOptionItem(
-                context,
-                isDarkMode,
-                Icons.visibility_off_outlined,
-                "Hide Post",
-                () => Navigator.pop(context),
-              ),
-
-              _buildOptionItem(
-                context,
-                isDarkMode,
-                Icons.block_outlined,
-                "Block ${post.username ?? 'User'}",
-                () => Navigator.pop(context),
-                isDestructive: true,
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
   Widget _buildOptionItem(
-    BuildContext context,
-    bool isDarkMode,
-    IconData icon,
-    String label,
-    VoidCallback onTap, {
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required bool isDarkMode,
     bool isDestructive = false,
   }) {
-    final textColor =
-        isDestructive
-            ? AppColors.errorLight
-            : (isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight);
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 24.w),
-        child: Row(
-          children: [
-            Icon(icon, color: textColor, size: 22.sp),
-            SizedBox(width: 16.w),
-            Text(
-              label,
-              style: AppStyle.textStyle(16, textColor, FontWeight.w500),
-            ),
-          ],
+    return ListTile(
+      leading: Icon(
+        icon,
+        color:
+            isDestructive
+                ? (isDarkMode ? AppColors.errorDark : AppColors.errorLight)
+                : (isDarkMode
+                    ? AppColors.textMediumDark
+                    : AppColors.textMediumLight),
+      ),
+      title: Text(
+        label,
+        style: TextStyle(
+          color:
+              isDestructive
+                  ? (isDarkMode ? AppColors.errorDark : AppColors.errorLight)
+                  : (isDarkMode
+                      ? AppColors.textDarkDark
+                      : AppColors.textDarkLight),
         ),
       ),
+      onTap: () {
+        Navigator.pop(context);
+        // Handle the option
+      },
     );
   }
 }

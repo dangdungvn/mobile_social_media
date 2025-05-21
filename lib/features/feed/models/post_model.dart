@@ -33,6 +33,7 @@ class PostModel {
   final int commentCount;
   final int shareCount;
   final bool isLiked;
+  final bool isVerified; // Added for user verification badge
   final String? originalPostId; // For shared posts
   final String? originalPostUserId; // For shared posts
 
@@ -49,6 +50,7 @@ class PostModel {
     this.commentCount = 0,
     this.shareCount = 0,
     this.isLiked = false,
+    this.isVerified = false,
     this.originalPostId,
     this.originalPostUserId,
   });
@@ -75,6 +77,7 @@ class PostModel {
       commentCount: json['comment_count'] ?? 0,
       shareCount: json['share_count'] ?? 0,
       isLiked: json['is_liked'] ?? false,
+      isVerified: json['is_verified'] ?? false,
       originalPostId: json['original_post_id'],
       originalPostUserId: json['original_post_user_id'],
     );
@@ -94,6 +97,7 @@ class PostModel {
       'comment_count': commentCount,
       'share_count': shareCount,
       'is_liked': isLiked,
+      'is_verified': isVerified,
       'original_post_id': originalPostId,
       'original_post_user_id': originalPostUserId,
     };

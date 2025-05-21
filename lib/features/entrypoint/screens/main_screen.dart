@@ -9,6 +9,7 @@ import 'package:mobile/features/search/screens/search_screen.dart';
 import 'package:mobile/features/chat/screens/chat_list_screen.dart';
 import 'package:mobile/features/profile/screens/profile_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:animations/animations.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -26,13 +27,50 @@ class _MainScreenState extends State<MainScreen> {
     const ChatListScreen(),
     const ProfileScreen(),
   ];
-
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
 
     return Scaffold(
-      body: _screens[_selectedIndex],
+      body: PageTransitionSwitcher(
+        transitionBuilder: (child, animation, secondaryAnimation) {
+          return FadeThroughTransition(
+            animation: animation,
+            secondaryAnimation: secondaryAnimation,
+            child: child,
+          );
+        },
+        child: _screens[_selectedIndex],
+      ),
+      floatingActionButton:
+          _selectedIndex != 2
+              ? null
+              : FloatingActionButton(
+                backgroundColor:
+                    isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+                onPressed: _showCreatePostOptions,
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topRight,
+                      end: Alignment.bottomLeft,
+                      colors: [
+                        isDarkMode
+                            ? AppColors.buttonGradientStartDark
+                            : AppColors.buttonGradientStartLight,
+                        isDarkMode
+                            ? AppColors.buttonGradientEndDark
+                            : AppColors.buttonGradientEndLight,
+                      ],
+                    ),
+                  ),
+                  child: Icon(Icons.add, color: Colors.white),
+                ),
+              ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
@@ -44,41 +82,66 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20.r),
-            topRight: Radius.circular(20.r),
-          ),
-          child: BottomNavigationBar(
-            backgroundColor:
-                isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-            selectedItemColor:
-                isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
-            unselectedItemColor:
-                isDarkMode ? AppColors.textLightDark : AppColors.textLightLight,
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            type: BottomNavigationBarType.fixed,
-            currentIndex: _selectedIndex,
-            onTap: (index) {
-              // If new post button is tapped (index 2), show modal bottom sheet
-              if (index == 2) {
-                _showCreatePostOptions();
-              } else {
-                setState(() {
-                  _selectedIndex = index;
-                });
-              }
-            },
-            items:
-                AppConstants.navItems.map((item) {
-                  return BottomNavigationBarItem(
-                    icon: Icon(
-                      _selectedIndex == AppConstants.navItems.indexOf(item)
-                          ? item['activeIcon']
-                          : item['icon'],
+        child: BottomAppBar(
+          shape: CircularNotchedRectangle(),
+          notchMargin: 8.0,
+          color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children:
+                AppConstants.navItems.asMap().entries.map((entry) {
+                  int index = entry.key;
+                  Map<String, dynamic> item = entry.value;
+
+                  // Skip center item which is handled by FloatingActionButton
+                  if (index == 2) return Spacer();
+
+                  return Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedIndex = index),
+                      child: SizedBox(
+                        height: 60.h,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _selectedIndex == index
+                                  ? item['activeIcon']
+                                  : item['icon'],
+                              color:
+                                  _selectedIndex == index
+                                      ? isDarkMode
+                                          ? AppColors.primaryDark
+                                          : AppColors.primaryLight
+                                      : isDarkMode
+                                      ? AppColors.textLightDark
+                                      : AppColors.textLightLight,
+                              size: 26.sp,
+                            ),
+                            SizedBox(height: 4.h),
+                            Text(
+                              item['label'],
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                color:
+                                    _selectedIndex == index
+                                        ? isDarkMode
+                                            ? AppColors.primaryDark
+                                            : AppColors.primaryLight
+                                        : isDarkMode
+                                        ? AppColors.textLightDark
+                                        : AppColors.textLightLight,
+                                fontWeight:
+                                    _selectedIndex == index
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    label: item['label'],
                   );
                 }).toList(),
           ),

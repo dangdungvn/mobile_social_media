@@ -92,7 +92,7 @@ class StoryList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 100.h,
+      height: 110.h,
       child: ListView.builder(
         padding: EdgeInsets.symmetric(horizontal: 12.w),
         scrollDirection: Axis.horizontal,
@@ -108,120 +108,161 @@ class StoryList extends StatelessWidget {
 class StoryItemWidget extends StatelessWidget {
   final StoryItem story;
 
-  const StoryItemWidget({super.key, required this.story});
+  const StoryItemWidget({required this.story, super.key});
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
 
     return Container(
-      width: 80.w,
-      margin: EdgeInsets.symmetric(horizontal: 4.w),
+      margin: EdgeInsets.symmetric(horizontal: 6.w),
       child: Column(
         children: [
-          // Avatar with story ring
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              // Colored ring around avatar
-              Container(
-                width: 64.w,
-                height: 64.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient:
-                      story.isViewed
-                          ? null // No gradient for viewed stories
-                          : LinearGradient(
-                            colors: [
-                              AppColors.secondaryLight,
-                              AppColors.accentLight,
-                              AppColors.primaryLight,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                  color:
-                      story.isViewed
-                          ? isDarkMode
-                              ? AppColors.dividerDark
-                              : AppColors.dividerLight
-                          : null,
-                ),
-              ),
-
-              // White padding between ring and avatar
-              Container(
-                width: 60.w,
-                height: 60.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
-                ),
-              ),
-
-              // User avatar
-              Container(
-                width: 56.w,
-                height: 56.w,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    image: NetworkImage(story.userProfilePicture),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-
-              // Plus icon for current user's "Add story"
-              if (story.isCurrentUser)
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    width: 20.w,
-                    height: 20.w,
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      shape: BoxShape.circle,
-                      border: Border.all(
+          Container(
+            width: 75.w,
+            height: 75.w,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border:
+                  story.isCurrentUser
+                      ? Border.all(
                         color:
                             isDarkMode
                                 ? AppColors.cardDark
                                 : AppColors.cardLight,
-                        width: 2.w,
+                        width: 2.5,
+                      )
+                      : Border.all(
+                        color:
+                            story.isViewed
+                                ? isDarkMode
+                                    ? AppColors.dividerDark.withOpacity(0.7)
+                                    : AppColors.dividerLight
+                                : isDarkMode
+                                ? Colors.transparent
+                                : Colors.transparent,
+                        width: 2.5,
                       ),
-                    ),
-                    child: Center(
-                      child: Icon(Icons.add, color: Colors.white, size: 12.sp),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-
-          SizedBox(height: 4.h),
-
-          // Username text
-          Text(
-            story.isCurrentUser
-                ? "Your Story"
-                : _truncateUsername(story.username),
-            style: AppStyle.textStyle(
-              12,
-              isDarkMode ? AppColors.textMediumDark : AppColors.textMediumLight,
-              story.isViewed ? FontWeight.normal : FontWeight.w500,
+              gradient:
+                  story.isViewed
+                      ? null
+                      : story.isCurrentUser
+                      ? null
+                      : LinearGradient(
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                        colors: [
+                          isDarkMode ? AppColors.accentDark : Colors.purple,
+                          isDarkMode
+                              ? AppColors.primaryDark
+                              : AppColors.primaryLight,
+                        ],
+                      ),
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            padding: EdgeInsets.all(3.5),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDarkMode ? AppColors.cardDark : AppColors.cardLight,
+                  width: 2.5,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(50.r),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Profile image
+                    Image.network(
+                      story.userProfilePicture,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            color:
+                                isDarkMode
+                                    ? AppColors.primaryDark
+                                    : AppColors.primaryLight,
+                            strokeWidth: 2,
+                          ),
+                        );
+                      },
+                      errorBuilder:
+                          (context, error, stackTrace) => Center(
+                            child: Icon(
+                              Icons.person,
+                              color:
+                                  isDarkMode
+                                      ? AppColors.textMediumDark
+                                      : AppColors.textMediumLight,
+                              size: 30.sp,
+                            ),
+                          ),
+                    ),
+
+                    // Add story icon for current user
+                    if (story.isCurrentUser)
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          width: 22.w,
+                          height: 22.w,
+                          decoration: BoxDecoration(
+                            color:
+                                isDarkMode
+                                    ? AppColors.primaryDark
+                                    : AppColors.primaryLight,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color:
+                                  isDarkMode
+                                      ? AppColors.cardDark
+                                      : Colors.white,
+                              width: 2,
+                            ),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.add,
+                              size: 14.sp,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: 6.h),
+          // Username
+          SizedBox(
+            width: 72.w,
+            child: Text(
+              story.username.split(' ')[0], // Just first name
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color:
+                    isDarkMode
+                        ? (story.isCurrentUser
+                            ? AppColors.primaryDark
+                            : AppColors.textMediumDark)
+                        : (story.isCurrentUser
+                            ? AppColors.primaryLight
+                            : AppColors.textMediumLight),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),
     );
-  }
-
-  String _truncateUsername(String username) {
-    if (username.length <= 9) return username;
-    return '${username.substring(0, 8)}...';
   }
 }

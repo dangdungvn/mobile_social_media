@@ -89,10 +89,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         ),
         leading: IconButton(
           onPressed: () {
-            context.go(AppConstants.routeNewsFeed);
+            context.pop();
           },
           icon: Icon(
-            Icons.close,
+            Icons.arrow_back,
             color:
                 isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
           ),

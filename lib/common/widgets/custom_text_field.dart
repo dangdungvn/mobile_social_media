@@ -18,6 +18,13 @@ class CustomTextField extends StatelessWidget {
   final Function(String)? onChanged;
   final Function(String)? onSubmitted;
   final String? Function(String?)? validator;
+  final double? borderRadius;
+  final EdgeInsetsGeometry? contentPadding;
+  final bool filled;
+  final Color? fillColor;
+  final InputBorder? border;
+  final InputBorder? enabledBorder;
+  final InputBorder? focusedBorder;
 
   const CustomTextField({
     super.key,
@@ -33,6 +40,13 @@ class CustomTextField extends StatelessWidget {
     this.onChanged,
     this.onSubmitted,
     this.validator,
+    this.borderRadius,
+    this.contentPadding,
+    this.filled = false,
+    this.fillColor,
+    this.border,
+    this.enabledBorder,
+    this.focusedBorder,
   });
 
   @override
@@ -46,6 +60,9 @@ class CustomTextField extends StatelessWidget {
       maxLines: maxLines,
       focusNode: focusNode,
       textInputAction: textInputAction,
+      onChanged: onChanged,
+      onFieldSubmitted: onSubmitted,
+      validator: validator,
       style: AppStyle.textStyle(
         14,
         isDarkMode ? AppColors.textDarkDark : AppColors.textDarkLight,
@@ -60,41 +77,50 @@ class CustomTextField extends StatelessWidget {
           isDarkMode ? AppColors.textLightDark : AppColors.textLightLight,
           FontWeight.normal,
         ),
-        contentPadding: EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
-        fillColor: isDarkMode ? AppColors.cardDark : AppColors.white,
-        filled: true,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isDarkMode ? AppColors.dividerDark : AppColors.dividerLight,
-            width: 1,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isDarkMode ? AppColors.dividerDark : AppColors.dividerLight,
-            width: 1,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
-            width: 1.5,
-          ),
-        ),
+        contentPadding:
+            contentPadding ??
+            EdgeInsets.symmetric(vertical: 16.h, horizontal: 16.w),
+        fillColor:
+            fillColor ?? (isDarkMode ? AppColors.cardDark : AppColors.white),
+        filled: filled || true,
+        border:
+            border ??
+            OutlineInputBorder(
+              borderRadius: BorderRadius.circular(borderRadius ?? 12),
+              borderSide: BorderSide(
+                color:
+                    isDarkMode ? AppColors.dividerDark : AppColors.dividerLight,
+                width: 1,
+              ),
+            ),
+        enabledBorder:
+            enabledBorder ??
+            OutlineInputBorder(
+              borderRadius: BorderRadius.circular(borderRadius ?? 12),
+              borderSide: BorderSide(
+                color:
+                    isDarkMode ? AppColors.dividerDark : AppColors.dividerLight,
+                width: 1,
+              ),
+            ),
+        focusedBorder:
+            focusedBorder ??
+            OutlineInputBorder(
+              borderRadius: BorderRadius.circular(borderRadius ?? 12),
+              borderSide: BorderSide(
+                color:
+                    isDarkMode ? AppColors.primaryDark : AppColors.primaryLight,
+                width: 1.5,
+              ),
+            ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(borderRadius ?? 12),
           borderSide: BorderSide(
             color: isDarkMode ? AppColors.errorDark : AppColors.errorLight,
             width: 1,
           ),
         ),
       ),
-      onChanged: onChanged,
-      onFieldSubmitted: onSubmitted,
-      validator: validator,
     );
   }
 }
