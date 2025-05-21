@@ -38,14 +38,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _register() {
+  void _register() async {
     if (_formKey.currentState!.validate()) {
-      // Authenticate user and set login state
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.login().then((_) {
-        // Navigate to main screen after successful registration
-        context.go(AppConstants.routeMain);
-      });
+
+      // Show progress indicator during registration
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Creating your account...'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      try {
+        final success = await authProvider.register(
+          username: _usernameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          fullName: _fullNameController.text.trim(),
+        );
+
+        if (success) {
+          // Navigate to main screen after successful registration
+          context.go(AppConstants.routeMain);
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(authProvider.error ?? 'Registration failed'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      }
     }
   }
 

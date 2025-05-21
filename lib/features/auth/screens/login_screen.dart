@@ -30,14 +30,45 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState!.validate()) {
-      // Authenticate user and set login state
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.login().then((_) {
-        // Navigate to main screen after successful login
-        context.go(AppConstants.routeMain);
-      });
+
+      // Show progress indicator during login
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Logging in...'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      try {
+        final success = await authProvider.login(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
+
+        if (success) {
+          // Navigate to main screen after successful login
+          context.go(AppConstants.routeMain);
+        } else {
+          // Show error message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(authProvider.error ?? 'Login failed'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+          );
+        }
+      }
     }
   }
 
